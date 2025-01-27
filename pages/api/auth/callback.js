@@ -4,10 +4,11 @@ import { User } from "../../../src/models/user.js";
 
 export default async function handler(req, res) {
   try {
-    await connectToDatabase();
+   console.log('hello');
 
     const session = await shopify.auth.validateAuthCallback(req, res);
     const { shop, accessToken } = session;
+    console.log(session);
 
     // Save user session to the database
     await User.findOneAndUpdate(
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
       { upsert: true, new: true }
     );
 
-    res.redirect("/about");
+    res.redirect("https://next-shopapp-non-embedded.vercel.app/about");
   } catch (error) {
     console.error("Callback error:", error);
     res.status(500).send("Authentication failed");
