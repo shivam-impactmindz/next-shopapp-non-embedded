@@ -10,7 +10,7 @@ export default function IndexPage() {
       return;
     }
 
-    const redirectUri = `${process.env.APP_URL}/api/auth?shop=${shop}`;
+    const redirectUri = `/api/auth?shop=${shop}`;
     window.location.href = redirectUri;
   };
 

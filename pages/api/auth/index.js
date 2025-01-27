@@ -1,18 +1,23 @@
-import { getShopifyOAuthUrl } from "@/utils/shopify";
+import shopify from "@/utils/shopify";
 
 export default async function handler(req, res) {
-  if (req.method === "POST") {
-    const { shop } = req.body;
+  if (req.method === "GET") {
+    const { shop } = req.query;
 
     if (!shop) {
       return res.status(400).json({ error: "Missing shop parameter." });
     }
 
     try {
-      const authUrl = getShopifyOAuthUrl(shop);
-      return res.status(200).json({ data: authUrl, isSuccess: true });
+      await shopify.auth.begin({
+        shop,
+        callbackPath: "/api/auth/callback",
+        isOnline: false, // Use `true` for online sessions
+        rawRequest: req,
+        rawResponse: res,
+      });
     } catch (error) {
-      console.error("Error generating Shopify OAuth URL:", error);
+      return res.status(500).json({ error: "Failed to initiate OAuth" });
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }

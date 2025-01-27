@@ -1,27 +1,13 @@
-export const getShopifyOAuthUrl = (shop) => {
-  const params = new URLSearchParams({
-    client_id: process.env.SHOPIFY_API_KEY,
-    scope: process.env.SHOPIFY_API_SCOPES,
-    redirect_uri: `${process.env.HOST}/api/auth/callback`,
-    state: Math.random().toString(36).substring(7),
-    grant_options: JSON.stringify(["per-user"]),
-  });
+import { shopifyApi } from "@shopify/shopify-api";
+import "@shopify/shopify-api/adapters/node";
 
-  return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
-};
+const shopify = shopifyApi({
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET,
+  scopes: process.env.SHOPIFY_API_SCOPES.split(","),
+  hostName: process.env.HOST.replace(/^https?:\/\//, ""), // Remove protocol from host
+  apiVersion: process.env.SHOPIFY_API_VERSION || "2023-10", // Default API version
+  isEmbeddedApp: true, // Use true for embedded apps, false otherwise
+});
 
-export const verifyShopifyHMAC = (query) => {
-  const crypto = require("crypto");
-  const { hmac, ...rest } = query;
-  const message = Object.keys(rest)
-    .sort()
-    .map((key) => `${key}=${rest[key]}`)
-    .join("&");
-
-  const generatedHmac = crypto
-    .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
-    .update(message)
-    .digest("hex");
-
-  return crypto.timingSafeEqual(Buffer.from(generatedHmac), Buffer.from(hmac));
-};
+export default shopify;
