@@ -21,9 +21,10 @@ export default function IndexPage() {
       });
 
       const data = await response.json();
+      console.log(data);
       if (data.isSuccess) {
-        setInstallUrl(data.data);
-        window.location.href = data.data;
+        setInstallUrl(data.authUrl);
+        window.location.href = data.authUrl;
       } else {
         alert("Failed to generate install URL.");
       }
