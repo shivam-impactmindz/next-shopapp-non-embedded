@@ -1,5 +1,3 @@
-
-// pages\index.js
 import { useState } from "react";
 export default function IndexPage() {
   const [shop, setShop] = useState("");
@@ -10,9 +8,9 @@ export default function IndexPage() {
       return;
     }
 
-    const redirectUri = `/api/auth?shop=${shop}`;
-    window.location.href = redirectUri;
-  };
+    window.location.href = `/api/auth?shop=${shop}`;
+ 
+  }
 
   return (
     <div>

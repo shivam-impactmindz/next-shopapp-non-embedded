@@ -1,3 +1,9 @@
+import shopify from "@/utils/shopify";
+import { MongoClient } from "mongodb";
+
+const uri = process.env.DATABASE_URL;
+const client = new MongoClient(uri);
+
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
