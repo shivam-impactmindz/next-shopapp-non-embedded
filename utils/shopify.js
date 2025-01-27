@@ -1,24 +1,13 @@
-import { Shopify } from "@shopify/shopify-api";
+import { shopifyApi } from "@shopify/shopify-api";
+import "@shopify/shopify-api/adapters/node";
 
-export const shopify = new Shopify({
+const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_API_SCOPES.split(","),
-  hostName: process.env.HOST.replace(/^https?:\/\//, ""),
-  apiVersion: process.env.SHOPIFY_API_VERSION,
-  isEmbeddedApp: true,
+  hostName: process.env.HOST.replace(/^https?:\/\//, ""), // Remove protocol from host
+  apiVersion: process.env.SHOPIFY_API_VERSION || "2023-10", // Default API version
+  isEmbeddedApp: true, // Use true for embedded apps, false otherwise
 });
 
-
-
-
-// import Shopify from "@shopify/shopify-api";
-
-// const shopify = new Shopify({
-//   apiKey: process.env.SHOPIFY_API_KEY,
-//   apiSecretKey: process.env.SHOPIFY_API_SECRET,
-//   scopes: process.env.SHOPIFY_API_SCOPES.split(","),
-//   hostName: new URL(process.env.HOST).host,
-// });
-
-// export default shopify;
+export default shopify;

@@ -1,6 +1,7 @@
-import { shopify } from "@/utils/shopify";
+import  shopify  from "@/utils/shopify";
 
 export default async function handler(req, res) {
+  console.log("hello");
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
