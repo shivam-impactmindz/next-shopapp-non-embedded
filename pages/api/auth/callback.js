@@ -1,6 +1,6 @@
 import { shopify } from "@/utils/shopify";
 import { connectToDatabase } from "@/utils/database";
-import { User } from "@/src/models/user";
+import { User } from "../../../src/models/user.js";
 
 export default async function handler(req, res) {
   try {
