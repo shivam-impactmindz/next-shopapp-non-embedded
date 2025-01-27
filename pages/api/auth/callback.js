@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
-      console.log("Sessionsadfasdf:", session);
+
 
       // Save session details to MongoDB or another storage
       await client.connect();
