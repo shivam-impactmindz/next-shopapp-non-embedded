@@ -1,11 +1,11 @@
-import { shopify } from "@/utils/shopify";
+import { verifyShopifyHMAC } from "@/utils/shopify";
 
-export const verifyRequest = async (req, res, next) => {
-  try {
-    const session = await shopify.auth.validateAuthCallback(req, res);
-    req.session = session;
-    next();
-  } catch (error) {
-    res.redirect(`/api/auth?shop=${req.query.shop}`);
-  }
-};
+export default function verifyRequest(handler) {
+  return async (req, res) => {
+    if (!verifyShopifyHMAC(req.query)) {
+      return res.status(400).send("HMAC validation failed");
+    }
+
+    return handler(req, res);
+  };
+}

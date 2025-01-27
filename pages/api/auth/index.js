@@ -1,30 +1,21 @@
-import  shopify  from "@/utils/shopify";
-
-import { URLSearchParams } from "url";
+import { getShopifyOAuthUrl } from "@/utils/shopify";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     const { shop } = req.body;
 
-    if (!shop || !shop.endsWith(".myshopify.com")) {
-      return res.status(400).send("Invalid or missing shop parameter.");
+    if (!shop) {
+      return res.status(400).json({ error: "Missing shop parameter." });
     }
 
     try {
-      const params = new URLSearchParams({
-        client_id: process.env.SHOPIFY_API_KEY,
-        scope: process.env.SHOPIFY_API_SCOPES,
-        redirect_uri: `${process.env.HOST}/api/auth/callback`,
-        state: Math.random().toString(36).substring(7),
-      });
-
-      const authUrl = `https://${shop}/admin/oauth/authorize?${params.toString()}`;
-  return res.status(200).json({authUrl:authUrl,isSuccess:true});
+      const authUrl = getShopifyOAuthUrl(shop);
+      return res.status(200).json({ data: authUrl, isSuccess: true });
     } catch (error) {
-      console.error("Error redirecting to Shopify OAuth:", error);
-      res.status(500).send("Internal Server Error");
+      console.error("Error generating Shopify OAuth URL:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
-  } else {
-    res.status(405).send("Method Not Allowed");
   }
+
+  res.status(405).json({ error: "Method Not Allowed" });
 }

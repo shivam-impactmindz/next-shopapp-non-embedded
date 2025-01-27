@@ -1,28 +1,42 @@
-import { shopify } from "@/utils/shopify";
-import { connectToDatabase } from "@/utils/database";
-import { User } from "../../../src/models/user.js";
+// pages/api/auth/callback.js
+import { getShopData, saveShopData } from "@/utils/database";
+import { verifyHmac } from "@/utils/shopify";
 
 export default async function handler(req, res) {
+  const { shop, hmac, code } = req.query;
+
+  if (!shop || !hmac || !code) {
+    return res.status(400).send("Missing required parameters");
+  }
+
+  // Verify the HMAC signature
+  const isValid = verifyHmac(req.query);
+  if (!isValid) {
+    return res.status(400).send("HMAC validation failed");
+  }
+
   try {
-   console.log('hello');
+    // Check if the shop is already installed
+    const shopData = await getShopData(shop);
+    if (shopData) {
+      // Redirect to your about page if already installed
+      return res.redirect(`${process.env.APP_URL}/about`);
+    }
 
-    const session = await shopify.auth.validateAuthCallback(req, res);
-    const { shop, accessToken } = session;
-    console.log(session);
+    // Generate the access token (you may use Shopify's access token exchange process here)
+    const accessToken = "your_generated_access_token"; // Replace with actual token logic
 
-    // Save user session to the database
-    await User.findOneAndUpdate(
-      { shop },
-      { shop, accessToken },
-      { upsert: true, new: true }
-    );
+    // Save shop details in the database
+    await saveShopData(shop, accessToken);
 
-    res.redirect("https://next-shopapp-non-embedded.vercel.app/about");
+    // Redirect to your app's homepage after installation
+    return res.redirect(`${process.env.APP_URL}/about`);
   } catch (error) {
-    console.error("Callback error:", error);
-    res.status(500).send("Authentication failed");
+    console.error("Error during callback:", error);
+    return res.status(500).send("Internal server error");
   }
 }
+
 
 
 
