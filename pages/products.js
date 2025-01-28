@@ -6,7 +6,7 @@ export default function Products() {
   const router = useRouter();
   const { shop } = router.query; // Access the `shop` parameter from the URL
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,7 +19,7 @@ export default function Products() {
         throw new Error("Failed to fetch products");
       }
       let data = await res.json();
-     
+      console.log(data);
       setProducts(data.products); // Update products state
     } catch (err) {
       console.error("Error fetching products:", err);
