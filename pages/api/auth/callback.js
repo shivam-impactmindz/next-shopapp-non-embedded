@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
-
+console.log(session);
 
       // Save session details to MongoDB or another storage
       await client.connect();
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       const sessions = database.collection("sessions");
 
       const { shop, accessToken, scope, isOnline, expires } = session;
-
+         
       const sessionData = {
         shop,
         accessToken,
