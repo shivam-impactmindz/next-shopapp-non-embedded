@@ -31,7 +31,7 @@ console.log(shop);
 
   useEffect(() => {
     getData();
-  }, [shop]); // Re-run effect when `shop` changes
+  }, []); // Re-run effect when `shop` changes
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
