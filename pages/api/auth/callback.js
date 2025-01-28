@@ -12,7 +12,6 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
-console.log(session);
 
       // Save session details to MongoDB or another storage
       await client.connect();
@@ -39,7 +38,7 @@ console.log(session);
   
 
     
-      res.redirect(`https://next-shopapp-non-embedded.vercel.app/about?host=${req.query.host}&shop=${shop}`);
+      res.redirect(`https://next-shopapp-non-embedded.vercel.app/products?host=${req.query.host}&shop=${shop}`);
     } catch (error) {
       console.error("Error during OAuth callback:", error);
       res.status(500).send("Error during authentication");
