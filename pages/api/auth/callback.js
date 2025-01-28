@@ -1,8 +1,6 @@
 import shopify from "@/utils/shopify";
-import { MongoClient } from "mongodb";
+import Session from "@/src/models/session";
 
-const uri = process.env.DATABASE_URL;
-const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -11,32 +9,30 @@ export default async function handler(req, res) {
         rawRequest: req,
         rawResponse: res,
       });
+      
+      const { id, shop, state, scope, accessToken } = session;
+       let existingsession = await Session.findOne({shop:shop});
+       if(existingsession){
+        console.log("alredy exist");
+       }
+       else{
+        let newsession = new Session({
+       id:id,
+       shop:shop,
+       state:state,
+       scope:scope,
+       accessToken:accessToken
+        })
+
+        await newsession.save();
+       }
 
 
+  
 
-      // Save session details to MongoDB or another storage
-      await client.connect();
-      const database = client.db("shopifyapp");
-      const sessions = database.collection("sessions");
-
-      const { shop, accessToken, scope, isOnline, expires } = session;
-
-      const sessionData = {
-        shop,
-        accessToken,
-        scope,
-        isOnline,
-        expires,
-        createdAt: new Date(),
-      };
-
-      await sessions.updateOne(
-        { shop },
-        { $set: sessionData },
-        { upsert: true }
-      );
-
-      console.log("Session saved to MongoDB.");
+ 
+     
+  
 
     
       res.redirect(`https://next-shopapp-non-embedded.vercel.app/about?host=${req.query.host}&shop=${shop}`);
