@@ -4,9 +4,9 @@ import { useRouter } from "next/router";
 
 export default function Products() {
   const router = useRouter();
-  const { shop } = router.query; // Access the `shop` parameter from the URL
 
-  const [products, setProducts] = useState();
+
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,31 +15,36 @@ export default function Products() {
 
     try {
       let res = await fetch(`/api/product`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch products");
-      }
+    
       let data = await res.json();
-      console.log(data);
-      setProducts(data.products); // Update products state
+      console.log(data.data);
+      setProducts(data.data); // Update products state
     } catch (err) {
       console.error("Error fetching products:", err);
-      setError(err.message);
+    
     } finally {
-      setLoading(false);
+      
     }
   };
 
   useEffect(() => {
     getData();
-  }, [shop]); // Re-run effect when `shop` changes
+  }, []); // Re-run effect when `shop` changes
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+
 
   return (
     <div>
-      <h1>Products for Shop: {shop}</h1>
-     
+      <h1>Products for Shop</h1>
+      {products.map((item)=>{
+        return(
+          <div key={item?.id}>
+             <h1>{item?.
+handle
+}</h1>
+          </div>
+        )
+      })}
     </div>
   );
 }
