@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 export default function Products() {
   const router = useRouter();
   const { shop } = router.query; // Access the `shop` parameter from the URL
-
+console.log(shop);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,7 +31,7 @@ export default function Products() {
 
   useEffect(() => {
     getData();
-  }, []); // Re-run effect when `shop` changes
+  }, [shop]); // Re-run effect when `shop` changes
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
