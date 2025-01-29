@@ -1,73 +1,191 @@
-'use client';
+import Layout from '../components/Layout';
 import { useEffect, useState } from 'react';
-import { useRouter } from "next/router";
 
 export default function Products() {
-  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const getData = async () => {
-    try {
-      let res = await fetch(`/api/product`);
-      let data = await res.json();
-      console.log(data.data);
-      setProducts(data.data); // Update products state
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
+    const getData = async () => {
+      try {
+        let res = await fetch(`/api/product`);
+        let data = await res.json();
+        setProducts(data.data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
     getData();
-  }, []); // Re-run effect when `shop` changes
+  }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error loading products</div>;
+  if (loading) return <div style={loadingStyle}>Loading...</div>;
+  if (error) return <div style={errorStyle}>Error loading products</div>;
+
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   return (
-    <div>
-      <h1>Products for Shop</h1>
-      {products.map((item) => (
-        <div key={item?.id} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px' }}>
-          <h2>Title: {item?.title}</h2>
-          <p>ID: {item?.id}</p>
-          <p>Handle: {item?.handle}</p>
-          <p>Product Type: {item?.product_type}</p>
-          <p>Vendor: {item?.vendor}</p>
-          <p>Created At: {item?.created_at}</p>
-          <p>Updated At: {item?.updated_at}</p>
-          <p>Published At: {item?.published_at}</p>
-          <p>Status: {item?.status}</p>
-          <p>Tags: {item?.tags}</p>
-          <p>Body HTML: {item?.body_html}</p>
-          {item?.image && (
-            <div>
-              <h3>Image:</h3>
-              <img src={item.image.src} alt={item.image.alt || item.title} style={{ width: '200px' }} />
-              <p>Image ID: {item.image.id}</p>
-              <p>Image Width: {item.image.width}</p>
-              <p>Image Height: {item.image.height}</p>
-            </div>
-          )}
-          <h3>Variants:</h3>
-          {item?.variants?.length > 0 ? (
-            item.variants.map((variant) => (
-              <div key={variant.id} style={{ marginLeft: '20px' }}>
-                <p>Variant ID: {variant.id}</p>
-                <p>Variant Title: {variant.title}</p>
-                <p>Variant Price: {variant.price}</p>
+    <Layout>
+      <div style={{ maxWidth: '1200px', margin: 'auto', padding: '20px' }}>
+        <h1 style={pageTitle}>Products</h1>
+
+        <div style={gridContainer}>
+          {products.map((item) => (
+            <div key={item?.id} style={cardStyle}>
+              {/* Product Image */}
+              {item?.image && (
+                <img
+                  src={item.image.src}
+                  alt={item.image.alt || item.title}
+                  style={imageStyle}
+                />
+              )}
+
+              {/* Product Details */}
+              <div style={cardContent}>
+                <h2 style={titleStyle}>{item?.title}</h2>
+                <p style={infoText}><strong>ID:</strong> {item?.id}</p>
+                <p style={infoText}><strong>Product Type:</strong> {item?.product_type}</p>
+                <p style={infoText}><strong>Vendor:</strong> {item?.vendor}</p>
+
+                {/* Product Description */}
+                {item?.body_html && (
+                  <div style={descContainer}>
+                    <h3 style={descHeading}>Description:</h3>
+                    <p 
+                      style={expanded[item?.id] ? descExpanded : descCollapsed} 
+                      dangerouslySetInnerHTML={{ __html: expanded[item?.id] ? item.body_html : item.body_html.substring(0, 120) + '...' }} 
+                    />
+                    {item.body_html.length > 120 && (
+                      <button 
+                        style={expandButton} 
+                        onClick={() => toggleExpand(item?.id)}
+                      >
+                        {expanded[item?.id] ? 'Show Less' : 'Read More'}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Variants Section */}
+                {item?.variants?.length > 0 ? (
+                  <div>
+                    <h3 style={variantHeading}>Variants:</h3>
+                    {item.variants.map((variant) => (
+                      <p key={variant.id} style={infoText}>
+                        {variant.title} - ${variant.price}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={infoText}>No variants available</p>
+                )}
               </div>
-            ))
-          ) : (
-            <p>No variants available</p>
-          )}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
+    </Layout>
   );
 }
+
+// Styles
+const loadingStyle = { textAlign: 'center', fontSize: '1.5rem', padding: '20px', color: '#333' };
+const errorStyle = { textAlign: 'center', fontSize: '1.5rem', padding: '20px', color: 'red' };
+
+const pageTitle = {
+  textAlign: 'center',
+  fontSize: '2rem',
+  fontWeight: 'bold',
+  color: '#333',
+  marginBottom: '20px',
+};
+
+const gridContainer = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '20px',
+};
+
+const cardStyle = {
+  backgroundColor: '#fff',
+  borderRadius: '10px',
+  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+  overflow: 'hidden',
+  transition: 'transform 0.2s ease-in-out',
+};
+
+const imageStyle = {
+  width: '100%',
+  height: '200px',
+  objectFit: 'cover',
+};
+
+const cardContent = {
+  padding: '15px',
+};
+
+const titleStyle = {
+  fontSize: '1.3rem',
+  fontWeight: 'bold',
+  color: '#333',
+  marginBottom: '5px',
+};
+
+const infoText = {
+  fontSize: '0.9rem',
+  color: '#555',
+  margin: '3px 0',
+};
+
+const descContainer = {
+  marginTop: '10px',
+  padding: '10px',
+  background: '#f9f9f9',
+  borderRadius: '5px',
+};
+
+const descHeading = {
+  fontSize: '1rem',
+  fontWeight: 'bold',
+};
+
+const descCollapsed = {
+  fontSize: '0.9rem',
+  color: '#444',
+  lineHeight: '1.5',
+  height: '40px',
+  overflow: 'hidden',
+};
+
+const descExpanded = {
+  fontSize: '0.9rem',
+  color: '#444',
+  lineHeight: '1.5',
+};
+
+const expandButton = {
+  backgroundColor: '#007bff',
+  color: '#fff',
+  padding: '5px 10px',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  fontSize: '0.9rem',
+  marginTop: '5px',
+};
+
+const variantHeading = {
+  fontSize: '1rem',
+  fontWeight: 'bold',
+  marginTop: '10px',
+};
