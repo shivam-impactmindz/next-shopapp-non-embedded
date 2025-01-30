@@ -1,6 +1,5 @@
 import shopify from "@/utils/shopify";
 import { MongoClient } from "mongodb";
-import Cookies from "cookies";
 
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
@@ -13,40 +12,30 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
+      // MongoDB Connection
+      await client.connect();
+      const database = client.db("shopifyapp");
+      const sessions = database.collection("sessions");
+
       const { shop, accessToken, scope } = session;
       const sessionData = {
         shop,
         accessToken,
         scope,
-        installed: true, // Mark app as installed
+        installed: true, // App Installed Flag
         createdAt: new Date(),
       };
 
-      // Save session data to cookies FIRST
-      const cookies = new Cookies(req, res);
-      cookies.set("shopify-app", JSON.stringify(sessionData), {
-        httpOnly: true,  // Prevent client-side access to cookie
-        secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-        sameSite: "none", // Allow cookies in cross-origin requests
-        path: "/",  // Make the cookie available across the whole site
-      });
-
-      // Debugging - Check if cookies are set
-      console.log("Cookies Set:", cookies.get("shopify-app"));
-
-      // Now, Save session details to MongoDB
-      await client.connect();
-      const database = client.db("shopifyapp");
-      const sessions = database.collection("sessions");
-
+      // Store session in DB
       await sessions.updateOne(
         { shop },
         { $set: sessionData },
         { upsert: true }
       );
 
-      // Redirect to /products after successful OAuth
-      res.redirect(`/products`);
+      // **Send session ID as Query Param**
+      res.redirect(`/products?shop=${shop}`);
+
     } catch (error) {
       console.error("Error during OAuth callback:", error);
       res.status(500).send("Error during authentication");

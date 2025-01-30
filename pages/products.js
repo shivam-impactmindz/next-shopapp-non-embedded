@@ -1,66 +1,45 @@
-import { MongoClient } from "mongodb";
-import Cookies from "cookies";
-import Layout from "../components/Layout";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Layout from "../components/Layout";
 
-export async function getServerSideProps(context) {
-  const { req, res } = context;
-  const cookies = new Cookies(req, res);
-  const shopData = cookies.get("shopify-app");
-
-  if (!shopData) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  const { shop, installed } = JSON.parse(shopData);
-
-  if (!installed) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  const client = new MongoClient(process.env.MONGO_URI);
-  await client.connect();
-  const database = client.db("shopifyapp");
-  const sessions = database.collection("sessions");
-  const session = await sessions.findOne({ shop });
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      shop,
-      accessToken: session.accessToken,
-    },
-  };
-}
-
-export default function ProductsPage({ shop, accessToken }) {
+export default function ProductsPage() {
+  const router = useRouter();
+  const { shop } = router.query;
+  const [session, setSession] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getData = async () => {
+    if (!shop) return;
+
+    const fetchSession = async () => {
       try {
-        let res = await fetch(`/api/product`);
-        let data = await res.json();
+        const res = await fetch(`/api/get-session?shop=${shop}`);
+        const data = await res.json();
+
+        if (data.session) {
+          setSession(data.session);
+        } else {
+          console.error("Session not found. Redirecting...");
+          router.push("/");
+        }
+      } catch (err) {
+        console.error("Error fetching session:", err);
+        router.push("/");
+      }
+    };
+
+    fetchSession();
+  }, [shop]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`/api/product`);
+        const data = await res.json();
         setProducts(data.data);
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -69,11 +48,13 @@ export default function ProductsPage({ shop, accessToken }) {
         setLoading(false);
       }
     };
-    getData();
-  }, []);
 
-  if (loading) return <div style={loadingStyle}>Loading...</div>;
-  if (error) return <div style={errorStyle}>Error loading products</div>;
+    fetchProducts();
+  }, [session]);
+
+  if (!session) return <div>Loading session...</div>;
+  if (loading) return <div style={{ textAlign: "center" }}>Loading products...</div>;
+  if (error) return <div style={{ color: "red" }}>Error loading products</div>;
 
   const toggleExpand = (id) => {
     setExpanded((prev) => ({
