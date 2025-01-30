@@ -13,11 +13,6 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
-      // Save session details to MongoDB
-      await client.connect();
-      const database = client.db("shopifyapp");
-      const sessions = database.collection("sessions");
-
       const { shop, accessToken, scope } = session;
       const sessionData = {
         shop,
@@ -27,21 +22,30 @@ export default async function handler(req, res) {
         createdAt: new Date(),
       };
 
+      // Save session data to cookies FIRST
+      const cookies = new Cookies(req, res);
+      cookies.set("shopify-app", JSON.stringify(sessionData), {
+        httpOnly: true,  // Prevent client-side access to cookie
+        secure: process.env.NODE_ENV === "production", // Use HTTPS in production
+        sameSite: "none", // Allow cookies in cross-origin requests
+        path: "/",  // Make the cookie available across the whole site
+      });
+
+      // Debugging - Check if cookies are set
+      console.log("Cookies Set:", cookies.get("shopify-app"));
+
+      // Now, Save session details to MongoDB
+      await client.connect();
+      const database = client.db("shopifyapp");
+      const sessions = database.collection("sessions");
+
       await sessions.updateOne(
         { shop },
         { $set: sessionData },
         { upsert: true }
       );
 
-      // Save session data to cookies
-      const cookies = new Cookies(req, res);
-      cookies.set("shopify-app", JSON.stringify(sessionData), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      });
-     // ✅ Debugging ke liye console log
-     console.log("Cookies Set:", cookies.get("shopify-app"));  
-
+      // Redirect to /products after successful OAuth
       res.redirect(`/products`);
     } catch (error) {
       console.error("Error during OAuth callback:", error);
@@ -54,6 +58,7 @@ export default async function handler(req, res) {
     res.status(405).send("Method Not Allowed");
   }
 }
+
 
 
 
