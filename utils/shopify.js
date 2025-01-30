@@ -1,7 +1,6 @@
 // utils/shopify.js
 import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
 import "@shopify/shopify-api/adapters/node";
-
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
@@ -10,7 +9,4 @@ const shopify = shopifyApi({
   apiVersion: process.env.SHOPIFY_API_VERSION || ApiVersion.October23, // Default API version
   isEmbeddedApp: true, // Use true for embedded apps, false otherwise
 });
-
-
-
 export default shopify;

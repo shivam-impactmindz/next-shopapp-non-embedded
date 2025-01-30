@@ -1,7 +1,8 @@
 import shopify from "@/utils/shopify";
 import { MongoClient } from "mongodb";
+import Cookies from "cookies";
 
-const uri = process.env.DATABASE_URL;
+const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
@@ -12,14 +13,11 @@ export default async function handler(req, res) {
         rawResponse: res,
       });
 
-
-      // Save session details to MongoDB or another storage
+      // Save session details to MongoDB
       await client.connect();
       const database = client.db("shopifyapp");
       const sessions = database.collection("sessions");
-
       const { shop, accessToken, scope, isOnline, expires } = session;
-         
       const sessionData = {
         shop,
         accessToken,
@@ -27,18 +25,25 @@ export default async function handler(req, res) {
         isOnline,
         expires,
         createdAt: new Date(),
+        installed: true, // Mark the app as installed
       };
-
       await sessions.updateOne(
         { shop },
         { $set: sessionData },
         { upsert: true }
       );
 
-  
+      // Save session data to cookies
+      const cookies = new Cookies(req, res);
+      cookies.set("shopify-app", JSON.stringify({ shop, installed: true }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
 
-    
-      res.redirect(`https://next-shopapp-non-embedded.vercel.app/products?host=${req.query.host}&shop=${shop}`);
+       // Register the "app/uninstalled" webhook
+       await registerWebhook(shop, accessToken);
+
+      res.redirect(`/products?host=${req.query.host}&shop=${shop}`);
     } catch (error) {
       console.error("Error during OAuth callback:", error);
       res.status(500).send("Error during authentication");
@@ -50,3 +55,77 @@ export default async function handler(req, res) {
     res.status(405).send("Method Not Allowed");
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import shopify from "@/utils/shopify";
+// import { MongoClient } from "mongodb";
+
+// const uri = process.env.DATABASE_URL;
+// const client = new MongoClient(uri);
+
+// export default async function handler(req, res) {
+//   if (req.method === "GET") {
+//     try {
+//       const { session } = await shopify.auth.callback({
+//         rawRequest: req,
+//         rawResponse: res,
+//       });
+
+
+
+//       // Save session details to MongoDB or another storage
+//       await client.connect();
+//       const database = client.db("shopifyapp");
+//       const sessions = database.collection("sessions");
+
+//       const { shop, accessToken, scope, isOnline, expires } = session;
+         
+//       const sessionData = {
+//         shop,
+//         accessToken,
+//         scope,
+//         isOnline,
+//         expires,
+//         createdAt: new Date(),
+//       };
+
+//       await sessions.updateOne(
+//         { shop },
+//         { $set: sessionData },
+//         { upsert: true }
+//       );
+
+  
+
+    
+//       res.redirect(`https://next-shopapp-non-embedded.vercel.app/products?host=${req.query.host}&shop=${shop}`);
+//     } catch (error) {
+//       console.error("Error during OAuth callback:", error);
+//       res.status(500).send("Error during authentication");
+//     } finally {
+//       await client.close();
+//     }
+//   } else {
+//     res.setHeader("Allow", ["GET"]);
+//     res.status(405).send("Method Not Allowed");
+//   }
+// }

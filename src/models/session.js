@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const sessionSchema = new mongoose.Schema({
     id: {
         type: String,
@@ -25,8 +24,6 @@ const sessionSchema = new mongoose.Schema({
         default: [],
     },
 });
-
 // Check if the model already exists to prevent OverwriteModelError
 const Session = mongoose.models.Session || mongoose.model("Session", sessionSchema);
-
 export default Session;
