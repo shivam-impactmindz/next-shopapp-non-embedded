@@ -17,16 +17,16 @@ export default async function handler(req, res) {
       await client.connect();
       const database = client.db("shopifyapp");
       const sessions = database.collection("sessions");
-      const { shop, accessToken, scope, isOnline, expires } = session;
+
+      const { shop, accessToken, scope } = session;
       const sessionData = {
         shop,
         accessToken,
         scope,
-        isOnline,
-        expires,
+        installed: true, // Mark app as installed
         createdAt: new Date(),
-        installed: true, // Mark the app as installed
       };
+
       await sessions.updateOne(
         { shop },
         { $set: sessionData },
@@ -35,15 +35,14 @@ export default async function handler(req, res) {
 
       // Save session data to cookies
       const cookies = new Cookies(req, res);
-      cookies.set("shopify-app", JSON.stringify({ shop, installed: true }), {
+      cookies.set("shopify-app", JSON.stringify(sessionData), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
       });
+     // ✅ Debugging ke liye console log
+     console.log("Cookies Set:", cookies.get("shopify-app"));  
 
-       // Register the "app/uninstalled" webhook
-       await registerWebhook(shop, accessToken);
-
-      res.redirect(`/products?host=${req.query.host}&shop=${shop}`);
+      res.redirect(`/products`);
     } catch (error) {
       console.error("Error during OAuth callback:", error);
       res.status(500).send("Error during authentication");

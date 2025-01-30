@@ -18,6 +18,7 @@ export async function getServerSideProps(context) {
   }
 
   const { shop, installed } = JSON.parse(shopData);
+
   if (!installed) {
     return {
       redirect: {
@@ -54,7 +55,6 @@ export default function ProductsPage({ shop, accessToken }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     const getData = async () => {

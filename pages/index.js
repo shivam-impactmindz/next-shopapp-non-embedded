@@ -6,16 +6,20 @@ import Cookies from 'js-cookie';
 export default function IndexPage() {
   const [shop, setShop] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check if the app is already installed
     const shopData = Cookies.get("shopify-app");
     if (shopData) {
       const { installed } = JSON.parse(shopData);
       if (installed) {
         router.push("/products");
+      } else {
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   }, [router]);
 
@@ -27,6 +31,8 @@ export default function IndexPage() {
     setError("");
     window.location.href = `/api/auth?shop=${shop.trim()}`;
   };
+
+  if (loading) return null; // Hide page while checking installation status
 
   return (
     <Layout>

@@ -1,6 +1,5 @@
-// pages/api/webhooks/uninstall.js
-import { WebhookHandler } from "@shopify/shopify-api";
 import { MongoClient } from "mongodb";
+import Cookies from "cookies";
 
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
@@ -8,25 +7,21 @@ const client = new MongoClient(uri);
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
-      // Verify the webhook payload (optional but recommended)
-      const handler = new WebhookHandler(process.env.SHOPIFY_API_SECRET);
-      const isValid = await handler.verify(req);
-      if (!isValid) {
-        return res.status(401).json({ error: "Invalid webhook signature" });
-      }
-
-      // Extract shop name from the webhook payload
       const { shop_domain: shop } = req.body;
 
-      // Update MongoDB to mark the app as uninstalled
       await client.connect();
       const database = client.db("shopifyapp");
       const sessions = database.collection("sessions");
 
+      // Update uninstall flag instead of deleting the session
       await sessions.updateOne(
         { shop },
         { $set: { installed: false } }
       );
+
+      // Clear cookies
+      const cookies = new Cookies(req, res);
+      cookies.set("shopify-app", "", { expires: new Date(0) });
 
       res.status(200).json({ success: true });
     } catch (error) {
