@@ -7,6 +7,6 @@ const shopify = shopifyApi({
   scopes: process.env.SHOPIFY_API_SCOPES.split(","),
   hostName: process.env.HOST.replace(/^https?:\/\//, ""), // Remove protocol from host
   apiVersion: process.env.SHOPIFY_API_VERSION || ApiVersion.October23, // Default API version
-  isEmbeddedApp: true, // Use true for embedded apps, false otherwise
+  isEmbeddedApp: false, // Use true for embedded apps, false otherwise
 });
 export default shopify;
